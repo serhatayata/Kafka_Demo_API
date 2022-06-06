@@ -13,7 +13,7 @@ namespace Kafka_Producer_API.Controllers
     public class ProducerController : ControllerBase
     {
         private readonly string bootstrapServers = "localhost:9092";
-        private readonly string topic = "test";
+        private readonly string topic = "kafka-test";
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] OrderRequest orderRequest)
@@ -32,14 +32,26 @@ namespace Kafka_Producer_API.Controllers
 
             try
             {
-                using(var producer = new ProducerBuilder<Null, string>(config).Build())
+                using(var producer = new ProducerBuilder<string, string>(config).Build())
                 {
-                    var result = await producer.ProduceAsync(topic, new Message<Null, string>
+                    Partition part = new Partition(3);
+                    var topicPart = new TopicPartition(topic, part);
+                    var result = await producer.ProduceAsync(topicPart, new Message<string, string>
                     {
-                        Value=message
+                        Key="Deneme_key",
+                        Value = message
                     });
 
+
                     Debug.WriteLine($"Delivery Timestamp : {result.Timestamp.UtcDateTime}");
+                    if (result.Status ==PersistenceStatus.Persisted)
+                    {
+                        Debug.WriteLine($"Added to queue : {result.Timestamp.UtcDateTime} -- Topic Partit {result.TopicPartitionOffset}");
+                    }
+                    else if (result.Status == PersistenceStatus.NotPersisted)
+                    {
+                        Debug.WriteLine($"Not added to queue : {result.Timestamp.UtcDateTime}");
+                    }
                     return await Task.FromResult(true);
                 }
             }

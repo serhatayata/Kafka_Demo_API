@@ -11,6 +11,7 @@ builder.Services.AddSwaggerGen();
 #region KAFKA
 builder.Services.AddSingleton<IHostedService, ApacheKafkaConsumerService>();
 #endregion
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
